@@ -2,7 +2,7 @@ namespace AdventOfCode.Solutions.Utils;
 
 public static class StringUtils
 {
-    public static string Reverse(this string str)
+    public static string ReverseString(this string str)
     {
         char[] arr = str.ToCharArray();
         Array.Reverse(arr);

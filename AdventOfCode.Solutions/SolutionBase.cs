@@ -5,6 +5,7 @@ global using System.Linq;
 global using System.Text;
 global using AdventOfCode.Solutions.Utils;
 
+
 using System.Diagnostics;
 using System.Net;
 

@@ -1,5 +1,6 @@
 ﻿using AdventOfCode.Solutions;
 
+// Load the config.json file from project root
 var config = Config.Get();
 var year = config.Year;
 var days = config.Days;
