@@ -32,8 +32,113 @@ class Solution : SolutionBase
      */
     public static bool GetPossibilityOfGame(string game_played)
     {
-        // Dictionary<string, int>
-        return false;
+        // Keeping track of cubes found in the game
+        // Couldn't use this for part one, might help for part two copium 
+        Dictionary<string, int> cube_tracker = new Dictionary<string, int>
+        {
+            { "red", 0 }, { "green", 0 }, { "blue", 0 }
+        };
+
+        // Parsing sets of cubes revealed from bag & updating the cube tracker
+        // Extract the 'right' substring after the ':'
+        int str_len = game_played.Length;
+        // -2 for len cuz last char is just 
+        string game_super_set = game_played.Substring(game_played.IndexOf(':') + ":".Length).Trim();
+        // Console.WriteLine($"Un-parsed sets= {game_set}");
+
+        // Logic:
+        // Superset = Game = final eval if possible or not = Collection of Sets = Example: '5 blue, 12 green, 12 red; 11 green, 3 red; 14 green, 3 blue, 18 red'
+        // Set = Collection of Game Pairs = Example: '7 blue, 6 green, 3 red' or '8 blue, 1 red'
+        // Game Pair = Collection of color of cube and it's number (revealed at once by the elf) = Example: '7 blue' or '1 red'
+
+        bool game_superset_flag = true;
+
+        string[] game_subsets = game_super_set.Split(';');
+        foreach(string each_game_set in game_subsets)
+        {
+            // Flag to check if game set was possible!
+            bool game_set_flag = true;
+            // Console.WriteLine($"Game set: {each_game_set.Trim()}");
+            // Need to match with 'key' in tracker and update value
+            // cube_tracker[cube_color] += num_cube_revealed for each '
+            string[] all_game_pairs = each_game_set.Split(",");
+            foreach (string each_game_pair in all_game_pairs)
+            {
+                // Flag to check if game pair was possible, by default, says it is false i.e. impossible game pair!
+
+                string cleaned_game_pair = each_game_pair.Trim();
+                // Console.WriteLine($"Game pair: {cleaned_game_pair}");
+                // At this point, something like: 6 green or 8 blue etc.
+                //string[] cube_color_num = cleaned_game_pair.Split(" ");
+                string cube_color = cleaned_game_pair.Split(' ')[1];
+                int num_cube_revealed = int.Parse(cleaned_game_pair.Split(' ')[0]);
+                // Console.WriteLine($"Cube color: {cube_color} || Revealed at once: {num_cube_revealed}");
+                cube_tracker[cube_color] += num_cube_revealed;
+                // OR SHOULD IT BE LIKE
+                // GetGamePairPossibility(cube_color, num_cube_revealed);
+                bool game_pair_flag = GetGamePairPossibility(cube_color, num_cube_revealed);
+                // Console.WriteLine($"\t\tWas this game pair: {cube_color} | {num_cube_revealed} possible? = {game_pair_flag}");
+                if (!game_pair_flag)
+                {
+                    game_set_flag = false;
+                    break;
+                }
+            }
+            Console.WriteLine($"\n\tWas this game sub-set: {each_game_set.Trim()} possible? ==> {game_set_flag}");
+            if ( !game_set_flag ) {
+                game_superset_flag = false;
+                break;
+            }
+            // Console.WriteLine($"\nWas this set of games played: {game_set.Trim()}\npossible? ===> {game_superset_flag}\n");
+
+        }
+        //cube_tracker.Select(i => $"\nFor Key {i.Key}, the Value is {i.Value}").ToList().ForEach(Console.WriteLine);
+
+        // Final check (This approach was not correct cuz the cubes, after being revealed, were put BACK into the bag
+        // 
+        /*
+        if ( (cube_tracker["red"] <= 12) & (cube_tracker["green"] <= 13) & (cube_tracker["blue"] <= 14))
+        {
+            result_flag = true;
+        }
+        */
+
+        // Console.WriteLine($"FINALLY, Was this game possible (overall): {game_superset_flag}\n");
+        return game_superset_flag;
+    }
+
+    /*
+     * Given an input colored cube & number of times it was shown at once (as part of a set)
+     * determine if it was indeed possible. Returns true if it was possible, false if it wasn't.
+     * The color and the maximum number of times it could theoretically have been shown at once are as follows:
+     * Red = 12
+     * Green = 13
+     * Blue = 14
+     * So for instance, (red, 1) would return true but (blue, 15) would return false
+     */
+    public static bool GetGamePairPossibility(string cube_color, int number_revealed_at_once)
+    {
+        bool result;
+        // List<string> valid_colors = ["red", "green", "blue"];
+        // var a = valid_colors[0];
+
+        switch (cube_color)
+        {
+            case "red":
+                result = (number_revealed_at_once <= 12) ? true : false;
+                break;
+            case "green":
+                result = ( number_revealed_at_once <= 13 ) ? true : false;
+                break;
+            case "blue":
+                result = (number_revealed_at_once <= 14) ? true : false;
+                break;
+            default:
+                result = false;
+                break;
+        }
+        // Console.WriteLine($"Game pair: {number_revealed_at_once}-{cube_color} possible??: {result}");
+        return result;
     }
 
     /*
@@ -81,7 +186,8 @@ class Solution : SolutionBase
         // Load records of all games played into a string array
         // So each line should be like: [ Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue;  ]
         string[] input_games_played = Input.SplitByNewline();
-        string first_game = input_games_played.First();
+        // string first_game = input_games_played.First();
+        // Array.Resize(ref input_games_played, 3);
         return GetSumOfAllPossibleGames(input_games_played).ToString();
     }
 
