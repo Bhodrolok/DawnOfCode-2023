@@ -57,6 +57,7 @@ class Solution : SolutionBase
             // Get calibration value of each line
             string each_line_calibration_value = ( useProper ) ? GetProperCalibrationValue(each_line) : GetCalibrationValue(each_line);
             // Store this, as int, to a int array for finally summing 
+            // Prob can be shortened by simply updating function return value data type itself {https://stackoverflow.com/a/638587}
             int num_val = int.Parse(each_line_calibration_value);
             // Console.WriteLine("Adding: " + num_val + " to int array!");
             temp_lines_int = temp_lines_int.Append(num_val).ToArray();
