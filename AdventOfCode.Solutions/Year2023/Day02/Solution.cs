@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 namespace AdventOfCode.Solutions.Year2023.Day02;
 
 /// <summary>
 ///  Class <c>Solution</c> for solving Problems (Part 1 + Part 2) given in Day 2 of Advent of Code 2023.
 ///  <para>
+///  P1:
 ///  The Elf would first like to know which games would have been possible 
 ///  if the bag contained only: 12 red cubes, 13 green cubes, and 14 blue cubes?
 ///  i.e.
@@ -12,6 +16,16 @@ namespace AdventOfCode.Solutions.Year2023.Day02;
 ///  Format of input:
 ///  Each game is listed with its ID number (like the 11 in Game 11: ...) 
 ///  followed by a semicolon-separated list of: subsets of cubes that were revealed from the bag (like 3 red, 5 green, 4 blue).
+///  
+///  P2:
+///  The Elf says they've stopped producing snow because they aren't getting any water! He isn't sure why the water stopped; 
+///  however, he can show you how to get to the water source to check it out for yourself. It's just up ahead!
+///  As you continue your walk, the Elf poses a second question: 
+///  in each game you played, what is the fewest number of cubes of each color that could have been in the bag to make the game possible?
+///  NB: Possible here is not same as possible in P1 !
+///  The power of a set of cubes is equal to the numbers of red, green, and blue cubes multiplied together. 
+///  For each game, find the minimum set of cubes that must have been present.
+///  Then, Compute the sum of the power of these sets.
 ///  </para>
 /// </summary>
 class Solution : SolutionBase
@@ -84,7 +98,7 @@ class Solution : SolutionBase
                     break;
                 }
             }
-            Console.WriteLine($"\n\tWas this game sub-set: {each_game_set.Trim()} possible? ==> {game_set_flag}");
+            // Console.WriteLine($"\n\tWas this game sub-set: {each_game_set.Trim()} possible? ==> {game_set_flag}");
             if ( !game_set_flag ) {
                 game_superset_flag = false;
                 break;
@@ -191,8 +205,138 @@ class Solution : SolutionBase
         return GetSumOfAllPossibleGames(input_games_played).ToString();
     }
 
+    /*
+     * POSSIBLE IN P2 != POSSIBLE IN P1
+     * Given an input 'superset' containing the recorded 
+     * return the power of the minimum set of cubes 
+     */
+    public static int GetPowerOfGame(string game_played)
+    {
+        // Keeping track of cubes found in the game
+        // Couldn't use this for part one, might help for part two copium 
+        // Keep record of minimum number of respective cubes required to make each 'set' possible
+        Dictionary<string, int> cube_num_tracker_OG = new Dictionary<string, int>
+        {
+            { "red", 0 }, { "green", 0 }, { "blue", 0 }
+        };
+        
+        string game_super_set = game_played.Substring(game_played.IndexOf(':') + ":".Length).Trim();
+        // Console.WriteLine($"Un-parsed sets= {game_set}");
+
+        // Logic:
+        // Superset = Game = final eval if possible or not = Collection of Sets
+        // Example: '5 blue, 12 green, 12 red; 11 green, 3 red; 14 green, 3 blue, 18 red'
+        // Set = Collection of 'Game Pairs'
+        // Example: '7 blue, 6 green, 3 red' or '8 blue, 1 red'
+        // Game Pair = Collection of Combo of color of cube and it's number (revealed at once by the elf)
+        // Example: '7 blue' or '1 red'
+
+        // Idea so far
+        // Loop through each set and record: cube_color & count
+        // Compare it to previous recorded info (start from scratch i.e. 0 for all 3)
+        // and update the previous record to the new one IF the old one was less than the new one
+        // Reason being if the old number was considered to be the minimum, the new game (set) would not have been 'possible'/playable
+        bool game_superset_flag = true;
+
+        string[] game_subsets = game_super_set.Split(';');
+
+        // Use copy of the original tracker with the same key-value pairs for comparing down the loop
+        Dictionary<string, int>  cube_num_tracker_new = cube_num_tracker_OG.ToDictionary(_ => _.Key, _ => _.Value);
+
+        // Loop through each set (or rather sub-set) included in the superset collection
+        foreach (string each_game_set in game_subsets)
+        {
+            // Console.WriteLine($"Game set: {each_game_set.Trim()}");
+            
+            string[] all_game_pairs = each_game_set.Split(",");
+            // Loop through each game pair from each game set
+            foreach (string each_game_pair in all_game_pairs)
+            {
+                string[] cleaned_game_pair = each_game_pair.Trim().Split(' ');
+                // Console.WriteLine($"Game pair: {cleaned_game_pair}");
+                // At this point, something like: 6 green or 8 blue etc.
+                //string[] cube_color_num = cleaned_game_pair.Split(" ");
+                string cube_color = cleaned_game_pair[1];
+                int num_cube_revealed = int.Parse(cleaned_game_pair[0]);
+                // Console.WriteLine($"Cube color: {cube_color} || Revealed at once: {num_cube_revealed}");
+                // Load the number (values) to the new comparison dictionary
+                cube_num_tracker_new[cube_color] += num_cube_revealed;
+            }
+            UpdateDictionaryIfNeeded(cube_num_tracker_OG, cube_num_tracker_new);
+            // Clear the values of the new tracker 
+            foreach (var kvp in cube_num_tracker_new)
+                cube_num_tracker_new[kvp.Key] = 0;
+        }
+        // Done looping through game (superset)
+
+        // cube_num_tracker_OG.Select(i => $"\nFor a cube of color: {i.Key}, the Minimum Required was {i.Value}\n^For game to have been playable!").ToList().ForEach(Console.WriteLine);
+
+        int power_result = GetPowerOfSetOfCubes(cube_num_tracker_OG["red"], cube_num_tracker_OG["green"], cube_num_tracker_OG["blue"]);
+        //Console.WriteLine($"Power of this game {GetGameID(game_played)} was found to be: {power_result}");
+        return power_result;
+    }
+
+    /*
+     * Given two Dictionaries containing kvps of type<string, int>, first param as 'old' and second as 'new'
+     * Compares the two dictionary's values and 
+     * Updates the values of the old IF it is found to be less than the same respective value in the new dict
+     * Old: { ("a", 0), ("b", 22) }
+     * New: { ("a", 42), ("b", 9) }
+     * ==> Old: { ("a", 42), ("b", 22) }
+     */
+    public static void UpdateDictionaryIfNeeded(Dictionary<string, int> old_dict, Dictionary<string, int> new_dict)
+    {
+        foreach (KeyValuePair<string, int> kvp in new_dict)
+        {
+            if ( old_dict[kvp.Key] < kvp.Value )
+            {
+                // Update old values to be newer one as it reflects that
+                // newer game could not have been playable with the number(value) of the old one
+                old_dict[kvp.Key] = kvp.Value;
+            }
+        }
+    }
+
+    /*
+     * The power of a set of cubes is defined as the numbers of (minimum set of) red, green, and blue cubes multiplied together.
+     * Given, in order, the (minimum) number of cubes for red, green, and blue color, return the power of the game set
+     */
+    public static int GetPowerOfSetOfCubes(int num_red, int num_green, int num_blue)
+    {
+        return (num_red * num_green * num_blue);
+    }
+
+    /*
+     * Given a collection of games played, return the sum of all 'powers' of sets played (in each game).
+     * Example:
+     * For Game: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+     * For above game to have been 'possible' i.e. 'playable' it needed a minimum of 6 red, 2 blue, and 3 green cubes
+     * Power of this Game will then be 6 * 2 * 3 = 36
+     * This logic is applied to each of the games played and the sum of the powers is ultimately returned.
+     */
+    public static int GetSumOfPowerOfGames(string[] games_played)
+    {
+        int[] power_tracker = new int[games_played.Length];
+
+        foreach(string each_game_played in games_played)
+        {
+            // Loop through each Game and extract the power of the cube sets required to make the game 'possible' i.e. 'payable'
+            // and append the power tracker with the retrieved power
+            int temp = GetPowerOfGame(each_game_played);
+            // power_tracker = power_tracker.Append(temp).ToArray();
+            power_tracker = [.. power_tracker, temp];
+        }
+        
+        // Add it all up & return the result as a System.Int32 !
+        return power_tracker.Sum();
+    }
+
+
     protected override string SolvePartTwo()
     {
-        return "";
+        // Load records of all the games played, into a string arr
+        string[] input_games_played = Input.SplitByNewline();
+        // Array.Resize(ref input_games_played, 2);
+        return GetSumOfPowerOfGames(input_games_played).ToString();
     }
 }
