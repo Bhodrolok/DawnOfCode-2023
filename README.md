@@ -1,6 +1,8 @@
 # AdventOfCodeBase
 Template project for solving Advent of Code in C#, running on [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
 
+# 2023 🚀
+
 - [Features](#features)
 - [Usage](#usage)
   - [Creating a repository](#creating-a-repository)
