@@ -12,6 +12,7 @@ public static class InputService
 
     private static readonly HttpClient _client = new(_handler)
     {
+        // Base URL
         BaseAddress = new Uri("https://adventofcode.com/"),
     };
 
