@@ -1,5 +1,6 @@
 namespace AdventOfCode.Solutions.Year<YEAR>.Day<DAY>;
 
+// Derive solution class from the base/parent class
 class Solution : SolutionBase
 {
     public Solution() : base(<DAY>, <YEAR>, "") { }
